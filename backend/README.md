@@ -1,14 +1,38 @@
 # Ignite Backend API
 
-REST API for the Ignite Habit Tracker app, built with **Express + TypeScript**.
+REST API untuk aplikasi Ignite Habit Tracker. Dibangun dengan **Express + TypeScript**.
 
 ## Setup
 
 ```bash
-cd backend
 npm install
-cp .env.example .env   # edit JWT_SECRET before production
-npm run dev            # starts on http://localhost:3000
+cp .env.example .env   # Edit JWT_SECRET sebelum deploy
+npm run dev            # Dev server dengan hot reload → http://localhost:3000
+```
+
+## Struktur
+
+```
+backend/
+├── src/
+│   ├── controllers/
+│   │   ├── auth.controller.ts        # Register, login, profile
+│   │   ├── habits.controller.ts      # CRUD habits
+│   │   └── completions.controller.ts # Toggle & catatan completion
+│   ├── db/
+│   │   └── store.ts                  # In-memory store + auto-save db.json
+│   ├── middleware/
+│   │   └── auth.middleware.ts        # JWT verification
+│   ├── routes/
+│   │   ├── auth.routes.ts
+│   │   ├── habits.routes.ts
+│   │   └── completions.routes.ts
+│   ├── types/
+│   │   └── index.ts                  # Shared TypeScript types
+│   └── index.ts                      # Entry point
+├── .env.example
+├── package.json
+└── tsconfig.json
 ```
 
 ## API Reference
@@ -42,15 +66,17 @@ npm run dev            # starts on http://localhost:3000
 | POST | `/api/completions/toggle` | `{ habitId, date }` | ✅ |
 | PUT | `/api/completions/note` | `{ habitId, date, note }` | ✅ |
 
-## Data persistence
-
-Data is stored in `db.json` (auto-created on first run). No external database needed.
-
 ## Auth
 
-JWT-based authentication. All protected routes require:
+Semua protected route membutuhkan header:
 ```
 Authorization: Bearer <token>
 ```
 
-Token is returned on login/register and expires based on `JWT_EXPIRES_IN` (default `7d`).
+Token didapat dari response `/api/auth/login` atau `/api/auth/register`. Default expire: `7d`.
+
+## Data Persistence
+
+Data disimpan di `db.json` (auto-dibuat saat pertama kali dijalankan). Tidak perlu database eksternal.
+
+> File `db.json` sudah di-gitignore — jangan di-commit.
