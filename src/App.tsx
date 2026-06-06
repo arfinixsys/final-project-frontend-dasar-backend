@@ -1,14 +1,17 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import BottomNav from '@/components/BottomNav'
 import SideNav from '@/components/SideNav'
+import ProtectedRoute from '@/components/ProtectedRoute'
 import TodayPage from '@/pages/TodayPage'
 import HabitsPage from '@/pages/HabitsPage'
 import StatsPage from '@/pages/StatsPage'
 import HabitDetailPage from '@/pages/HabitDetailPage'
 import ProfilePage from '@/pages/ProfilePage'
+import LoginPage from '@/pages/LoginPage'
+import RegisterPage from '@/pages/RegisterPage'
 import { useReminder } from '@/hooks/useReminder'
 
-export default function App() {
+function AppLayout() {
   useReminder()
   return (
     <div className="min-h-screen flex">
@@ -26,5 +29,23 @@ export default function App() {
       </main>
       <BottomNav />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/*" element={<AppLayout />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

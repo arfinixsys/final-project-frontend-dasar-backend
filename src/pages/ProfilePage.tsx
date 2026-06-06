@@ -1,10 +1,16 @@
 import { useHabitStore } from '@/store/useHabitStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { useBadges } from '@/hooks/useBadges'
 import { calculateStreak } from '@/lib/analytics'
+import { useNavigate } from 'react-router-dom'
+
 export default function ProfilePage() {
   const habits = useHabitStore((s) => s.habits)
   const completions = useHabitStore((s) => s.completions)
   const { earned, locked, earnedCount, total } = useBadges()
+  const user = useAuthStore((s) => s.user)
+  const clearAuth = useAuthStore((s) => s.clearAuth)
+  const navigate = useNavigate()
 
   const today = new Date()
   const active = habits.filter((h) => !h.archivedAt)
@@ -13,14 +19,24 @@ export default function ProfilePage() {
     return sum + current
   }, 0)
 
-  const joinDate =
-    habits.length > 0
-      ? new Date(
-          Math.min(...habits.map((h) => new Date(h.createdAt).getTime()))
-        )
+  const joinDate = user?.createdAt
+    ? new Date(user.createdAt)
+    : habits.length > 0
+      ? new Date(Math.min(...habits.map((h) => new Date(h.createdAt).getTime())))
       : null
 
-  const initials = 'U'
+  const displayName = user?.name ?? 'Habit Tracker'
+  const initials = displayName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
+  function handleLogout() {
+    clearAuth()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="p-4 md:p-5 pb-24">
@@ -30,7 +46,10 @@ export default function ProfilePage() {
           {initials}
         </div>
         <div className="min-w-0">
-          <h1 className="text-xl font-bold">Habit Tracker</h1>
+          <h1 className="text-xl font-bold">{displayName}</h1>
+          {user?.email && (
+            <p className="text-xs text-muted-foreground">{user.email}</p>
+          )}
           <p className="text-sm text-muted-foreground">
             {joinDate
               ? `Joined ${joinDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
@@ -40,6 +59,12 @@ export default function ProfilePage() {
             {active.length} active {active.length === 1 ? 'habit' : 'habits'}
           </p>
         </div>
+        <button
+          onClick={handleLogout}
+          className="ml-auto shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-destructive hover:border-destructive transition"
+        >
+          Sign out
+        </button>
       </div>
 
       {/* Stats summary */}
