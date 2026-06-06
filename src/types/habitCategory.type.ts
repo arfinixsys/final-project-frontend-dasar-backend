@@ -1,0 +1,1 @@
+export type HabitCategory = string
