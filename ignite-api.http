@@ -1,0 +1,269 @@
+### Ignite Habit Tracker — API Test File
+### Requires: REST Client extension (VS Code)
+### Install : Ctrl+Shift+X → search "REST Client" by Humao
+
+@baseUrl = http://localhost:3000/api
+@token = PASTE_TOKEN_DARI_LOGIN_DI_SINI
+
+# ══════════════════════════════════════════════════════════
+# HEALTH CHECK
+# ══════════════════════════════════════════════════════════
+
+### Health Check
+GET {{baseUrl}}/health
+
+
+# ══════════════════════════════════════════════════════════
+# AUTH
+# ══════════════════════════════════════════════════════════
+
+### 1. Register akun baru
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Budi Santoso",
+  "email": "budi@test.com",
+  "password": "password123"
+}
+
+###
+
+### 2. Login — copy nilai "token" dari response, paste ke @token di atas
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "budi@test.com",
+  "password": "password123"
+}
+
+###
+
+### 3. Get current user
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+###
+
+### 4. Update nama
+PUT {{baseUrl}}/auth/profile
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Budi Updated"
+}
+
+###
+
+### 5. Ganti password
+PUT {{baseUrl}}/auth/profile
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "currentPassword": "password123",
+  "newPassword": "newpassword456"
+}
+
+
+# ══════════════════════════════════════════════════════════
+# HABITS
+# ══════════════════════════════════════════════════════════
+
+### 6. Buat habit — Daily
+POST {{baseUrl}}/habits
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Morning Run",
+  "emoji": "🏃",
+  "color": "#22c55e",
+  "category": "Health",
+  "recurrence": { "type": "daily" },
+  "reminderTime": "07:00"
+}
+
+###
+
+### 7. Buat habit — Weekdays
+POST {{baseUrl}}/habits
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Read Book",
+  "emoji": "📚",
+  "color": "#6366f1",
+  "category": "Learning",
+  "recurrence": { "type": "weekdays" }
+}
+
+###
+
+### 8. Buat habit — Specific days (Senin=1, Rabu=3, Jumat=5)
+POST {{baseUrl}}/habits
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Gym",
+  "emoji": "💪",
+  "color": "#ef4444",
+  "category": "Health",
+  "recurrence": { "type": "specific_days", "days": [1, 3, 5] }
+}
+
+###
+
+### 9. Buat habit — Every N days
+POST {{baseUrl}}/habits
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Deep Clean",
+  "emoji": "🧹",
+  "color": "#06b6d4",
+  "category": "Productivity",
+  "recurrence": { "type": "every_n_days", "n": 3 }
+}
+
+###
+
+### 10. Buat habit — Monthly
+POST {{baseUrl}}/habits
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Budget Review",
+  "emoji": "📊",
+  "color": "#eab308",
+  "category": "Productivity",
+  "recurrence": { "type": "monthly", "dayOfMonth": 1 }
+}
+
+###
+
+### 11. Get semua habits
+GET {{baseUrl}}/habits
+Authorization: Bearer {{token}}
+
+###
+
+### 12. Get habit by ID
+# Ganti HABIT_ID dengan id dari response request #6–10
+GET {{baseUrl}}/habits/HABIT_ID
+Authorization: Bearer {{token}}
+
+###
+
+### 13. Update habit
+PUT {{baseUrl}}/habits/HABIT_ID
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Morning Run (Updated)",
+  "color": "#f97316"
+}
+
+###
+
+### 14. Archive habit
+PATCH {{baseUrl}}/habits/HABIT_ID/archive
+Authorization: Bearer {{token}}
+
+###
+
+### 15. Unarchive habit
+PATCH {{baseUrl}}/habits/HABIT_ID/unarchive
+Authorization: Bearer {{token}}
+
+###
+
+### 16. Delete habit
+DELETE {{baseUrl}}/habits/HABIT_ID
+Authorization: Bearer {{token}}
+
+
+# ══════════════════════════════════════════════════════════
+# COMPLETIONS
+# ══════════════════════════════════════════════════════════
+
+### 17. Get semua completions
+GET {{baseUrl}}/completions
+Authorization: Bearer {{token}}
+
+###
+
+### 18. Toggle completion (add jika belum ada, remove jika sudah ada)
+POST {{baseUrl}}/completions/toggle
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "habitId": "HABIT_ID",
+  "date": "2026-06-06"
+}
+
+###
+
+### 19. Update catatan completion
+PUT {{baseUrl}}/completions/note
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "habitId": "HABIT_ID",
+  "date": "2026-06-06",
+  "note": "Lari 5km pagi ini, cuaca cerah!"
+}
+
+
+# ══════════════════════════════════════════════════════════
+# ERROR CASES
+# ══════════════════════════════════════════════════════════
+
+### 20. Register email duplikat — harus 409
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "User Lain",
+  "email": "budi@test.com",
+  "password": "password123"
+}
+
+###
+
+### 21. Login password salah — harus 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "budi@test.com",
+  "password": "salah"
+}
+
+###
+
+### 22. Request tanpa token — harus 401
+GET {{baseUrl}}/habits
+
+###
+
+### 23. Buat habit tanpa nama — harus 400
+POST {{baseUrl}}/habits
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "emoji": "⭐",
+  "color": "#6366f1",
+  "category": "Health",
+  "recurrence": { "type": "daily" }
+}

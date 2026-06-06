@@ -1,125 +1,98 @@
-# 🔥 Ignite — Habit Tracker
+# Ignite Backend API
 
-Aplikasi habit tracker full-stack dengan fitur streak, analytics, dan achievement badges.
+REST API untuk aplikasi **Ignite Habit Tracker**. Dibangun dengan Express + TypeScript.
 
-## Struktur Project
+> Repo ini hanya berisi backend. Frontend tersedia di repo terpisah.
 
-```
-ignite/
-├── src/                  # Frontend — React + TypeScript + Vite
-├── backend/              # Backend — Express + TypeScript
-├── .env.example          # Template environment variable frontend
-└── README.md
-```
-
-## Tech Stack
-
-| | Frontend | Backend |
-|---|---|---|
-| Framework | React 19 + Vite | Express 4 |
-| Language | TypeScript 6 | TypeScript 5 |
-| State | Zustand 5 | — |
-| Styling | Tailwind CSS 4 + shadcn/ui | — |
-| Auth | JWT (via API) | JWT + bcryptjs |
-| Validasi | React Hook Form + Zod | Zod |
-| Charts | Chart.js + react-chartjs-2 | — |
-| DB | — | In-memory + db.json |
-
----
-
-## Setup & Menjalankan
-
-### 1. Frontend
+## Setup
 
 ```bash
-# Di root project
-cp .env.example .env
 npm install
-npm run dev
-# → http://localhost:5173
-```
-
-### 2. Backend
-
-```bash
-cd backend
 cp .env.example .env   # Edit JWT_SECRET sebelum deploy ke production
-npm install
-npm run dev
-# → http://localhost:3000
+npm run dev            # → http://localhost:3000
 ```
 
-Jalankan keduanya secara bersamaan di terminal terpisah.
+## Struktur
 
----
+```
+src/
+├── controllers/
+│   ├── auth.controller.ts        # Register, login, get me, update profile
+│   ├── habits.controller.ts      # CRUD habits + archive/unarchive
+│   └── completions.controller.ts # Toggle completion & update catatan
+├── db/
+│   └── store.ts                  # In-memory store dengan auto-save ke db.json
+├── middleware/
+│   └── auth.middleware.ts        # Verifikasi JWT
+├── routes/
+│   ├── auth.routes.ts
+│   ├── habits.routes.ts
+│   └── completions.routes.ts
+├── types/
+│   └── index.ts                  # Shared TypeScript types
+└── index.ts                      # Entry point Express
+```
 
-## Fitur
+## Scripts
 
-- **Auth** — Register dan login dengan JWT, session tersimpan di localStorage
-- **Today View** — Daftar habit yang due hari ini, progress bar, konfeti saat semua selesai
-- **Habit Management** — Tambah, edit, archive, dan hapus habit dengan berbagai tipe recurrence
-- **Recurrence Types** — Daily, weekdays, weekends, hari tertentu, setiap N hari, atau bulanan
-- **Stats & Analytics** — Streak, consistency score, momentum, break risk, heatmap 16 minggu
-- **Habit Detail** — Mini calendar, weekly bar chart, korelasi antar habit
-- **Achievement Badges** — 9 badge yang bisa di-unlock berdasarkan performa
-- **Reminders** — Notifikasi browser berdasarkan `reminderTime` yang diset per habit
+| Command | Keterangan |
+|---------|------------|
+| `npm run dev` | Dev server dengan hot reload (tsx watch) |
+| `npm run build` | Compile TypeScript ke `dist/` |
+| `npm start` | Jalankan dari hasil build |
 
----
-
-## API Endpoints
+## API Reference
 
 ### Auth
-```
-POST   /api/auth/register     Body: { name, email, password }
-POST   /api/auth/login        Body: { email, password }
-GET    /api/auth/me           Header: Authorization: Bearer <token>
-PUT    /api/auth/profile      Header: Authorization: Bearer <token>
-```
+
+| Method | Path | Body | Auth |
+|--------|------|------|------|
+| POST | `/api/auth/register` | `{ name, email, password }` | ❌ |
+| POST | `/api/auth/login` | `{ email, password }` | ❌ |
+| GET | `/api/auth/me` | — | ✅ |
+| PUT | `/api/auth/profile` | `{ name?, email?, currentPassword?, newPassword? }` | ✅ |
 
 ### Habits
-```
-GET    /api/habits            Semua habit milik user
-POST   /api/habits            Buat habit baru
-GET    /api/habits/:id        Detail habit
-PUT    /api/habits/:id        Update habit
-PATCH  /api/habits/:id/archive    Archive habit
-PATCH  /api/habits/:id/unarchive  Unarchive habit
-DELETE /api/habits/:id        Hapus habit beserta completions
-```
+
+| Method | Path | Auth |
+|--------|------|------|
+| GET | `/api/habits` | ✅ |
+| POST | `/api/habits` | ✅ |
+| GET | `/api/habits/:id` | ✅ |
+| PUT | `/api/habits/:id` | ✅ |
+| PATCH | `/api/habits/:id/archive` | ✅ |
+| PATCH | `/api/habits/:id/unarchive` | ✅ |
+| DELETE | `/api/habits/:id` | ✅ |
 
 ### Completions
+
+| Method | Path | Body | Auth |
+|--------|------|------|------|
+| GET | `/api/completions` | — | ✅ |
+| POST | `/api/completions/toggle` | `{ habitId, date }` | ✅ |
+| PUT | `/api/completions/note` | `{ habitId, date, note }` | ✅ |
+
+## Auth
+
+Semua protected route membutuhkan header:
 ```
-GET    /api/completions              Semua completion milik user
-POST   /api/completions/toggle       Toggle completion { habitId, date }
-PUT    /api/completions/note         Update catatan { habitId, date, note }
+Authorization: Bearer <token>
 ```
 
----
+Token didapat dari response `/api/auth/login` atau `/api/auth/register`.
+Default expire: `7d` (bisa diubah via `JWT_EXPIRES_IN`).
 
-## Environment Variables
+## Data Persistence
 
-**Frontend (`.env`)**
+Data disimpan otomatis ke `db.json` di root project (dibuat saat pertama kali dijalankan).
+File ini sudah di-gitignore — tidak perlu database eksternal untuk development.
+
+## Integrasi dengan Frontend
+
+Tambahkan di `.env` frontend:
 ```env
 VITE_API_URL=http://localhost:3000/api
 ```
 
-**Backend (`backend/.env`)**
-```env
-PORT=3000
-JWT_SECRET=ganti_ini_sebelum_deploy
-JWT_EXPIRES_IN=7d
-NODE_ENV=development
-```
-
----
-
-## Scripts
-
-| Lokasi | Command | Keterangan |
-|---|---|---|
-| Root | `npm run dev` | Jalankan frontend dev server |
-| Root | `npm run build` | Build frontend untuk production |
-| Root | `npm run lint` | ESLint check |
-| `backend/` | `npm run dev` | Jalankan backend dengan hot reload |
-| `backend/` | `npm run build` | Compile TypeScript ke `dist/` |
-| `backend/` | `npm start` | Jalankan backend dari hasil build |
+Semua request dari frontend menggunakan `Authorization: Bearer <token>` header
+yang disimpan di `localStorage` setelah login.
